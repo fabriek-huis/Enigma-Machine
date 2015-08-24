@@ -1,7 +1,7 @@
 
 var EnigmaMachine = function (keys, rings, rotors, plugboard, type, ukw) {
     
-    version = "0.0.1";
+    version = "0.0.2";
     
     console.log('Enigma Machine [version: '+version+']');
     
