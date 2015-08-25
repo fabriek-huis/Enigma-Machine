@@ -1,7 +1,7 @@
 
 var EnigmaMachine = function (keys, rings, rotors, plugboard, type, ukw) {
     
-    version = "0.0.7";
+    version = "0.0.8";
     
     console.log('Enigma Machine [version: '+version+']');
     
@@ -16,6 +16,7 @@ var EnigmaMachine = function (keys, rings, rotors, plugboard, type, ukw) {
     this.Keys = keys.toUpperCase().replace(/[^A-Z]/g, ""); //Grundstellung (basic position, Starting Position)
     this.Rings = rings.toUpperCase().replace(/[^A-Z]/g, ""); //Ringstellung (ring position)
     this.Rotors = rotors.replace(/[^1-9]/g, ""); //Walzenlage (roll Location)
+	this.Walzenlage = [];
     this.Plugboard = plugboard.toUpperCase().replace(/[^A-Z]/g, ""); //Steckerbrett (Plugboard?)
 	this.UKW = ""; //Umkehrwalze (reflector, reverse roll)
 	this.ETW = ""; //Eintrittzwalze (entry wheel, entry roll)
@@ -25,6 +26,7 @@ var EnigmaMachine = function (keys, rings, rotors, plugboard, type, ukw) {
     console.log('Machine Type: '+this.Machine);
     console.log('UKW: '+UKW);
     console.log('ETW: '+ETW);
+	console.log('Walzenlage: '+Walzenlage);
 				
     function MachineType(machine,option){
 		
@@ -52,27 +54,47 @@ var EnigmaMachine = function (keys, rings, rotors, plugboard, type, ukw) {
         switch(machine) {
             
 			case 1:
-                
-                type = "Enigma I";
-                this.ETW = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 				
-				var ukw = {	A:"EJMZALYXVBWFCRQUONTSPIKHGD", //UKW-A 
-						  	B:"YRUHQSLDPXNGOKMIEBFZCWVJAT", //UKW-B
-						  	C:"FVPJIAOYEDRZXWGCTKUQSBNMHL"	//UKW-C
-						  };
-						   
-				this.UKW = ukw[obj];
+				var data = {
+					name : "Enigma I",
+					etw : "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+					ukw : {
+						A : "EJMZALYXVBWFCRQUONTSPIKHGD", //UKW-A 
+						B : "YRUHQSLDPXNGOKMIEBFZCWVJAT", //UKW-B
+						C : "FVPJIAOYEDRZXWGCTKUQSBNMHL"	  //UKW-C
+					},
+					walzenlage : {							//Wheel		Notch	Turnover	#
+						I : "EKMFLGDQVZNTOWYHXUSPAIBRCJ",	//I			Y		Q			1
+						II : "AJDKSIRUXBLHWTMCQGZNPYFVOE",	//II		M		E			1
+						III : "BDFHJLCPRTXVZNYEIWGAKMUSQO",	//III		D		V			1
+						IV : "ESOVPZJAYQUIRHXLNFTGKDCMWB",	//IV		R		J			1
+						V : "VZBRGITYUPSDNHLXAWMJQOFECK"		//V			H		Z			1
+					}
+				}
 				
+				type = data.name;
+				this.ETW = data.etw;
+				this.UKW = data.ukw[obj];
+				this.Walzenlage = objs(data.walzenlage);
                 break;
+				
             case 2:
                 type = "Norway Enigma";
                 break;
             default:
-                type = "Enigma I";
+               alert("please set a Type of Enigma Machine, 1 = Enigma 1.");   
         }
         return type;
     }
 };
+
+function objs(obj){
+	var array = [];
+	for(var i in obj) {
+		array.push(obj[i]);
+	}
+	return array;
+}
 
 EnigmaMachine.prototype.Cipher = function(message){
     
