@@ -1,7 +1,7 @@
 
 var EnigmaMachine = function (keys, rings, rotors, plugboard, type, ukw) {
     
-    version = "0.0.6";
+    version = "0.0.7";
     
     console.log('Enigma Machine [version: '+version+']');
     
@@ -13,18 +13,24 @@ var EnigmaMachine = function (keys, rings, rotors, plugboard, type, ukw) {
                 'Machine Type: '+type+'\n'+
                 'UKW Type: '+ukw);
     
-    this.Keys = keys.toUpperCase().replace(/[^A-Z]/g, "");
-    this.Rings = rings.toUpperCase().replace(/[^A-Z]/g, "");
-    this.Rotors = rotors.replace(/[^1-9]/g, "");
-    this.Plugboard = plugboard.toUpperCase().replace(/[^A-Z]/g, "");
+    this.Keys = keys.toUpperCase().replace(/[^A-Z]/g, ""); //Grundstellung (basic position, Starting Position)
+    this.Rings = rings.toUpperCase().replace(/[^A-Z]/g, ""); //Ringstellung (ring position)
+    this.Rotors = rotors.replace(/[^1-9]/g, ""); //Walzenlage (roll Location)
+    this.Plugboard = plugboard.toUpperCase().replace(/[^A-Z]/g, ""); //Steckerbrett (Plugboard?)
+	this.UKW = ""; //Umkehrwalze (reflector, reverse roll)
+	this.ETW = ""; //Eintrittzwalze (entry wheel, entry roll)
     this.Type = type;
-    this.Machine = MachineType(type,ukw);
-    this.UKW = "";
+	this.Machine = MachineType(type,ukw);
     
     console.log('Machine Type: '+this.Machine);
-    
-    function MachineType(machine,ukw){
-        
+    console.log('UKW: '+UKW);
+    console.log('ETW: '+ETW);
+				
+    function MachineType(machine,option){
+		
+		option = option-1; //change offset
+        var obj = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.charAt(option);
+		
         /*
             Machine Types:
             Enigma I       = 1   UKW = 1,2,3
@@ -44,25 +50,19 @@ var EnigmaMachine = function (keys, rings, rotors, plugboard, type, ukw) {
         */
         
         switch(machine) {
-            case 1:
+            
+			case 1:
                 
                 type = "Enigma I";
-                this.UKW = "YRUHQSLDPXNGOKMIEBFZCWVJAT";
-                
-                if(ukw == 1){
-                    this.UKW = "EJMZALYXVBWFCRQUONTSPIKHGD"; //UKW-A	
-                }else if(ukw == 2){
-                    this.UKW = "YRUHQSLDPXNGOKMIEBFZCWVJAT"; //UKW-B
-                }else if(ukw == 3){
-                    this.UKW = "FVPJIAOYEDRZXWGCTKUQSBNMHL"; //UKW-C
-                }
-                
-                /*
-                    UKW-A	EJMZALYXVBWFCRQUONTSPIKHGD	 	 	 
-                    UKW-B	YRUHQSLDPXNGOKMIEBFZCWVJAT	 	 	 
-                    UKW-C	FVPJIAOYEDRZXWGCTKUQSBNMHL
-                */
-                
+                this.ETW = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+				
+				var ukw = {	A:"EJMZALYXVBWFCRQUONTSPIKHGD", //UKW-A 
+						  	B:"YRUHQSLDPXNGOKMIEBFZCWVJAT", //UKW-B
+						  	C:"FVPJIAOYEDRZXWGCTKUQSBNMHL"	//UKW-C
+						  };
+						   
+				this.UKW = ukw[obj];
+				
                 break;
             case 2:
                 type = "Norway Enigma";
@@ -99,33 +99,42 @@ EnigmaMachine.prototype.Cipher = function(message){
     // interpret the rotor settings (strings 1-8 to int 0-7)
     var rotors = rotorsettings.split("");
     rotors[0]=rotors[0].valueOf()-1;rotors[1]=rotors[1].valueOf()-1;rotors[2]=rotors[2].valueOf()-1; 
-
+	//console.log("rotors= "+rotors);
+	
     // parse plugboard settings, store as a simple substitution key
-    var plugboard = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	
+    var plugboard = ETW; //"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     var parr = plugboard.split("");
-    
+    //console.log("plugboard= "+plugboard);
+	//console.log("parr= "+parr);
+	
     for(i=0,j=1;i<plugboardsettings.length;i+=2,j+=2){
         ichar = plugboard.indexOf(plugboardsettings.charAt(i));
         jchar = plugboard.indexOf(plugboardsettings.charAt(j));
         temp = parr[jchar]; parr[jchar]=parr[ichar]; parr[ichar]=temp;
     }
     plugboard = parr.join("");
-    //console.log(plugboard);
+    //console.log("plugboard= "+plugboard);
     
     // interpret key and ring settings (convert from letters to numbers 0-25)
     key=keysettings.split("");
     key[0]=code(key[0]); key[1]=code(key[1]); key[2]=code(key[2]);
     ring=ringsettings.split("");
     ring[0]=code(ring[0]); ring[1]=code(ring[1]); ring[2]=code(ring[2]);
-
+	//console.log("key= "+key);
+	
     // do the actual enigma enciphering  
     for(i=0; i < plaintext.length; i++){
-        ch=plaintext.charAt(i);
-
-        // if the current character is not a letter, pass it through unchanged
+		
+        ch = plaintext.charAt(i);
+		//console.log("ch= "+ch);
+		
+        //if the current character is not a letter, pass it through unchanged
         if(!ch.match(/[A-Z]/)){
             
             /*
+			//might add additional encryption for other characters
+			
             var characters = "!\"#$%&'()=~|<>?_+*}`{-^¥@[;:],./\_";
             if(characters.indexOf('!') === -1){
                 alert("no dash found.");
@@ -133,12 +142,17 @@ EnigmaMachine.prototype.Cipher = function(message){
                 alert("found.");
             }
             */
-            
+			
             ciphertext = ciphertext + ch;
             
         }else{
-            key=increment_settings(key,rotors);
+			
+            key = increment_settings(key,rotors);
+			//console.log("key= "+key);
+			
             ciphertext = ciphertext + enigma(ch,key,rotors,ring,plugboard);
+			//console.log("plugboard= "+plugboard);
+			//console.log("ciphertext= "+ciphertext);
         }
     }
     
@@ -146,20 +160,33 @@ EnigmaMachine.prototype.Cipher = function(message){
 }
 
 function enigma(ch, key, rotors, ring, plugboard){
+	
     // apply plugboard transformation
     ch = simplesub(ch,plugboard);
+	//console.log("ch= "+ch);
+	
     // apply rotor transformations from right to left
     ch = rotor(ch,rotors[2],key[2]-ring[2]);
+	//console.log("ch= "+ch);
+	
     ch = rotor(ch,rotors[1],key[1]-ring[1]);
+	//console.log("ch= "+ch);
+	
     ch = rotor(ch,rotors[0],key[0]-ring[0]);
-    // use reflector B
+	//console.log("ch= "+ch);
+	
+    // use reflector
     ch = simplesub(ch,this.UKW);
+	
     // apply inverse rotor transformations from left to right
     ch = rotor(ch,rotors[0]+8,key[0]-ring[0]);
     ch = rotor(ch,rotors[1]+8,key[1]-ring[1]);
     ch = rotor(ch,rotors[2]+8,key[2]-ring[2]);
+	
     // apply plugboard transformation again
     ch = simplesub(ch,plugboard);
+	//console.log("ch= "+ch);
+	
     return ch;
 }
 
